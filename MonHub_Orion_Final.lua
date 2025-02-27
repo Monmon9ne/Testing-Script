@@ -57,7 +57,7 @@ local Window = OrionLib:MakeWindow({
 
 -- Creating tabs
 local Tabs = {
- [[-- thay bằng
+ --[[ thay bằng
     local Tab = Window:MakeTab({
 	Name = "Tab 1",
 	Icon = "rbxassetid://122052674752327",
