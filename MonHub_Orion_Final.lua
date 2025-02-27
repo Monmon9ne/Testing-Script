@@ -44,9 +44,6 @@ warn("[Anti Afk] - loaded successfully")
 --<>----<>----<>----< Main Script >----<>----<>----<>--
 print("[Mon Hub | Fisch]: loading...")
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-
 local Window = OrionLib:MakeWindow({
     Name = "Mon Hub | v1.6",
     SubTitle = "v1.6",
