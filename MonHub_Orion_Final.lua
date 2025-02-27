@@ -57,14 +57,13 @@ local Window = OrionLib:MakeWindow({
 
 -- Creating tabs
 local Tabs = {
-    Home = OrionLib:MakeTab({ Title = "Home", Icon = "home" }),
-    Main = OrionLib:MakeTab({ Title = "Main", Icon = "code" }),
-    Teleports = OrionLib:MakeTab({ Title = "Teleports", Icon = "compass" }),
-    Misc = OrionLib:MakeTab({ Title = "Misc", Icon = "file-text" }),
-    Fun = OrionLib:MakeTab({ Title = "Fun", Icon = "coffee" }),
-    Webhook = OrionLib:MakeTab({ Title = "Webhook", Icon = "clock" }),
-    Premium = OrionLib:MakeTab({ Title = "Premium", Icon = "diamond" }),
-    Settings = OrionLib:MakeTab({ Title = "Settings", Icon = "settings" })
+ [[-- thay bằng
+    local Tab = Window:MakeTab({
+	Name = "Tab 1",
+	Icon = "rbxassetid://122052674752327",
+	PremiumOnly = false
+})
+    ]]--
 }
 
 local Options = 
