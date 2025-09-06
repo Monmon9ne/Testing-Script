@@ -1281,3 +1281,65 @@ btnVoidPlayer.MouseButton1Click:Connect(function()
         if flingConn then flingConn:Disconnect() flingConn = nil end
     end
 end)
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Settings
+local jumpPower = 50
+local loopJump = false
+local yOffset = -50 -- xích lên
+
+-- Jump function
+local function InfJump()
+    if rootPart then
+        rootPart.Velocity = Vector3.new(rootPart.Velocity.X, 0, rootPart.Velocity.Z) + Vector3.new(0, jumpPower, 0)
+    end
+end
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Invisible overlay button
+local LoopJumpButton = Instance.new("TextButton")
+LoopJumpButton.Size = UDim2.new(0, 100, 0, 100)
+LoopJumpButton.Position = UDim2.new(0.85, 0, 0.8, 0 + yOffset)
+LoopJumpButton.BackgroundTransparency = 1 -- hoàn toàn invisible
+LoopJumpButton.Text = "" -- không text
+LoopJumpButton.TextTransparency = 1
+LoopJumpButton.Parent = ScreenGui
+
+-- Mobile hold events
+LoopJumpButton.MouseButton1Down:Connect(function()
+    loopJump = true
+end)
+LoopJumpButton.MouseButton1Up:Connect(function()
+    loopJump = false
+end)
+
+-- PC fallback
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Space then
+        loopJump = true
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Space then
+        loopJump = false
+    end
+end)
+
+-- Loop jump
+RunService.RenderStepped:Connect(function()
+    if loopJump then
+        InfJump()
+    end
+end)
