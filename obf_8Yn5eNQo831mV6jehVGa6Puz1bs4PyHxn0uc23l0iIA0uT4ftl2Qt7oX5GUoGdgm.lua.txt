@@ -587,7 +587,7 @@ local function getTargetPosition(target)
     elseif target:IsA("BasePart") then
         local pos = target.Position
         if isSizeClose(target.Size, Vector3.new(17, 10, 2), 0.01) then
-            local zOffset = hrp.Position.X > -410 and 5 or -5
+            local zOffset = hrp.Position.X > -410,-30 and 5 or -5
             pos = pos + Vector3.new(0, 0, zOffset)
         end
         return pos
@@ -734,7 +734,7 @@ local function moveToTarget(target, level, fromThirdFloor)
                 updateStatus("Moving to X = -410...")
                 moveUntilLinear(
                     function()
-                        local distanceToTarget = math.abs(hrp.Position.X - (-410))
+                        local distanceToTarget = math.abs(hrp.Position.X - (-410,-30))
                         local reached = distanceToTarget < 1
                         local stopEarly = distanceToTarget <= 5
                         if stopEarly then
