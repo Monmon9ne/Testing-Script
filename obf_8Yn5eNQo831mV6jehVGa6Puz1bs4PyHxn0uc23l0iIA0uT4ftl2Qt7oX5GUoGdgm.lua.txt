@@ -32,8 +32,8 @@ ToggleCorner.CornerRadius = UDim.new(0, 12)
 
 -- // Main Frame (ESP and Fly Menu Toggle)
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 280, 0, 350) -- Kích thước đã điều chỉnh để phù hợp với bảng mới
-MainFrame.Position = UDim2.new(0.5, -140, 0.5, -175) -- Vị trí đã điều chỉnh
+MainFrame.Size = UDim2.new(0, 280, 0, 260) -- Kích thước đã điều chỉnh
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -130) -- Vị trí đã điều chỉnh
 MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
@@ -276,7 +276,7 @@ LocalPlayer.CharacterAdded:Connect(function(newCharacter)
     hrp = newCharacter:WaitForChild("HumanoidRootPart")
     updateStatus("Idle")
     print("Character respawned, status reset to Idle")
-    
+
     -- Reset Superman Mode on respawn
     if isSupermanModeActive then
         isSupermanModeActive = false
@@ -356,7 +356,7 @@ local function moveToDelivery()
     task.wait(0.2)
 
     local speed = 41
-    
+
     local reached = false
     local maxTime = 8
     local startTime = tick()
@@ -463,7 +463,6 @@ local function moveToDelivery()
             end
             return
         end
-        
         lv.VectorVelocity = Vector3.new(0, -speed, 0)
         updateStatus("Descending, current Y: " .. math.floor(hrp.Position.Y))
     end)
@@ -1255,6 +1254,7 @@ SupermanBtn.MouseButton1Click:Connect(function()
             supermanSpeedConnection:Disconnect()
             supermanSpeedConnection = nil
         end
+        
         if supermanJumpConnection then
             supermanJumpConnection:Disconnect()
             supermanJumpConnection = nil
