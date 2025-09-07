@@ -82,29 +82,273 @@ espLabel.Font = Enum.Font.Gotham
 espLabel.TextSize = 14
 espLabel.Parent = MainFrame
 
-local btnBrainrotGod = Instance.new("TextButton")
-btnBrainrotGod.Size = UDim2.new(0, 220, 0, 25)
-btnBrainrotGod.Position = UDim2.new(0.5, -110, 0, 90)
-btnBrainrotGod.BackgroundColor3 = Color3.fromRGB(70, 70, 100)
-btnBrainrotGod.Text = "Brainrot God: OFF"
-btnBrainrotGod.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnBrainrotGod.Font = Enum.Font.GothamBold
-btnBrainrotGod.TextSize = 14
-btnBrainrotGod.Parent = MainFrame
-local BtnCornerBg = Instance.new("UICorner", btnBrainrotGod)
-BtnCornerBg.CornerRadius = UDim.new(0, 10)
+-- Mon Hub GUI (Web Slinger Auto Aim + Highest Value ESP)
 
-local btnSecret = Instance.new("TextButton")
-btnSecret.Size = UDim2.new(0, 220, 0, 25)
-btnSecret.Position = UDim2.new(0.5, -110, 0, 120)
-btnSecret.BackgroundColor3 = Color3.fromRGB(70, 70, 100)
-btnSecret.Text = "Secret: OFF"
-btnSecret.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnSecret.Font = Enum.Font.GothamBold
-btnSecret.TextSize = 14
-btnSecret.Parent = MainFrame
-local BtnCornerSecret = Instance.new("UICorner", btnSecret)
-BtnCornerSecret.CornerRadius = UDim.new(0, 10)
+-- Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MonHubGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game.CoreGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 250, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -175)
+MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundTransparency = 1
+Title.Text = "Mon Hub"
+Title.Font = Enum.Font.GothamBold
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 18
+Title.Parent = MainFrame
+
+-- ========== LOGIC ==========
+
+-- Web Slinger Auto Aim
+local webSlingerConnection = nil
+local webSlingerAutoAimEnabled = false
+
+function enableWebSlingerAutoAim()
+    if webSlingerConnection then webSlingerConnection:Disconnect() end
+
+    local tool = player.Backpack:FindFirstChild("Web Slinger") or (player.Character and player.Character:FindFirstChild("Web Slinger"))
+    if not tool then
+        local args = {"Web Slinger"}
+        pcall(function()
+            ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RF/CoinsShopService/RequestBuy"):InvokeServer(unpack(args))
+        end)
+        task.wait(1)
+        tool = player.Backpack:FindFirstChild("Web Slinger") or (player.Character and player.Character:FindFirstChild("Web Slinger"))
+        if not tool then
+            StarterGui:SetCore("SendNotification",{Title="Web Slinger Auto Aim",Text="Failed to get Web Slinger",Duration=3})
+            return
+        end
+    end
+
+    webSlingerAutoAimEnabled = true
+    StarterGui:SetCore("SendNotification",{Title="Web Slinger Auto Aim",Text="ON",Duration=2})
+
+    local handle = tool:WaitForChild("Handle")
+
+    local function findNearestPlayer()
+        local closest, dist = nil, math.huge
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local hum = plr.Character:FindFirstChild("Humanoid")
+                if hum and hum.Health > 0 then
+                    local d = (handle.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+                    if d < dist then
+                        dist = d
+                        closest = plr
+                    end
+                end
+            end
+        end
+        return closest
+    end
+
+    webSlingerConnection = tool.Activated:Connect(function()
+        local target = findNearestPlayer()
+        if target and target.Character then
+            local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local pos = hrp.Position
+                local args = {vector.create(pos.X, pos.Y, pos.Z), hrp, handle}
+                ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/UseItem"):FireServer(unpack(args))
+                StarterGui:SetCore("SendNotification",{Title="Web Slinger Auto Aim",Text="Fired at "..target.Name,Duration=2})
+            end
+        end
+    end)
+end
+
+function disableWebSlingerAutoAim()
+    if webSlingerConnection then webSlingerConnection:Disconnect() webSlingerConnection=nil end
+    webSlingerAutoAimEnabled = false
+    StarterGui:SetCore("SendNotification",{Title="Web Slinger Auto Aim",Text="OFF",Duration=2})
+end
+
+
+-- Highest Value ESP
+local highestValueEnabled = false
+local espConnections = {}
+
+local function extractNumber(str)
+    if not str then return 0 end
+    local numberStr = str:match("%$(.-)/s")
+    if not numberStr then return 0 end
+    numberStr = numberStr:gsub("%s","")
+    local mult=1
+    if numberStr:lower():find("k") then mult=1_000 numberStr=numberStr:gsub("[kK]","")
+    elseif numberStr:lower():find("m") then mult=1_000_000 numberStr=numberStr:gsub("[mM]","")
+    elseif numberStr:lower():find("b") then mult=1_000_000_000 numberStr=numberStr:gsub("[bB]","")
+    end
+    return (tonumber(numberStr) or 0)*mult
+end
+
+local mutationColors = {
+    Gold = Color3.fromRGB(255,215,0),
+    Diamond = Color3.fromRGB(0,255,255),
+    Lava = Color3.fromRGB(255,100,0),
+    Bloodrot = Color3.fromRGB(255,0,0),
+}
+
+local function getMutationTextAndColor(mutationLabel)
+    if not mutationLabel or mutationLabel.Visible==false then return "Default", Color3.new(1,1,1) end
+    local name = mutationLabel.Text
+    if name == "Rainbow" then return "Rainbow", Color3.new(1,1,1) end
+    return name, mutationColors[name] or Color3.new(1,1,1)
+end
+
+local function createGui(base, labels)
+    if base:FindFirstChild("StatGui") then base.StatGui:Destroy() end
+    local gui = Instance.new("BillboardGui")
+    gui.Name="StatGui"
+    gui.Size=UDim2.new(0,200,0,60)
+    gui.StudsOffset=Vector3.new(0,3,0)
+    gui.AlwaysOnTop=true
+    gui.Adornee=base
+    gui.Parent=base
+
+    local function makeLabel(order,text,color)
+        local label=Instance.new("TextLabel")
+        label.Size=UDim2.new(1,0,0.25,0)
+        label.Position=UDim2.new(0,0,0.25*(order-1),0)
+        label.BackgroundTransparency=1
+        label.TextScaled=true
+        label.TextStrokeTransparency=0.5
+        label.Font=Enum.Font.SourceSansBold
+        label.Text=text
+        label.TextColor3=color or Color3.new(1,1,1)
+        label.Parent=gui
+    end
+
+    makeLabel(1,labels.DisplayName,Color3.new(1,1,1))
+    makeLabel(2,labels.Generation,Color3.new(0.8,0.8,0.8))
+    makeLabel(3,labels.Mutation,labels.MutationColor or Color3.new(1,1,1))
+    makeLabel(4,labels.Rarity,Color3.new(0.5,1,0.5))
+end
+
+local function scanHighestValue()
+    for _,plot in pairs(Workspace:WaitForChild("Plots"):GetChildren()) do
+        local purchases=plot:FindFirstChild("Purchases")
+        if purchases then
+            local highestVal,highestMain=0,nil
+            for _,purchase in pairs(purchases:GetChildren()) do
+                local main=purchase:FindFirstChild("Main")
+                local gui=main and main:FindFirstChild("BillboardGui")
+                local rem=gui and gui:FindFirstChild("RemainingTime")
+                local rarity=gui and gui:FindFirstChild("Rarity")
+                local generation=gui and gui:FindFirstChild("Generation")
+                local mutation=gui and gui:FindFirstChild("Mutation")
+                if main and rem and rarity and generation then
+                    local val=extractNumber(rem.Text)
+                    if val>highestVal then
+                        highestVal=val
+                        local mutationText,mutationColor=getMutationTextAndColor(mutation)
+                        highestMain={base=main,labels={
+                            DisplayName=rarity.Text,
+                            Generation=generation.Text,
+                            Mutation=mutationText,
+                            MutationColor=mutationColor,
+                            Rarity=rem.Text
+                        }}
+                    end
+                end
+            end
+            if highestMain then
+                createGui(highestMain.base,highestMain.labels)
+            end
+        end
+    end
+end
+
+function enableHighestValueESP()
+    highestValueEnabled=true
+    StarterGui:SetCore("SendNotification",{Title="Highest Value ESP",Text="ON",Duration=2})
+    espConnections["Loop"]=RunService.Heartbeat:Connect(function()
+        if highestValueEnabled then pcall(scanHighestValue) end
+    end)
+end
+
+function disableHighestValueESP()
+    highestValueEnabled=false
+    StarterGui:SetCore("SendNotification",{Title="Highest Value ESP",Text="OFF",Duration=2})
+    if espConnections["Loop"] then espConnections["Loop"]:Disconnect() espConnections["Loop"]=nil end
+    for _,plot in pairs(Workspace:WaitForChild("Plots"):GetChildren()) do
+        local purchases=plot:FindFirstChild("Purchases")
+        if purchases then
+            for _,purchase in pairs(purchases:GetChildren()) do
+                local main=purchase:FindFirstChild("Main")
+                if main and main:FindFirstChild("StatGui") then main.StatGui:Destroy() end
+            end
+        end
+    end
+end
+
+-- ========== BUTTONS ==========
+
+-- Web Slinger Auto Aim
+local isWebSlingerOn = false
+local btnWebSlinger = Instance.new("TextButton")
+btnWebSlinger.Size = UDim2.new(0, 220, 0, 25)
+btnWebSlinger.Position = UDim2.new(0.5, -110, 0, 90)
+btnWebSlinger.BackgroundColor3 = Color3.fromRGB(70,70,100)
+btnWebSlinger.Text = "Web Slinger Auto Aim: OFF"
+btnWebSlinger.TextColor3 = Color3.new(1,1,1)
+btnWebSlinger.Font = Enum.Font.GothamBold
+btnWebSlinger.TextSize = 14
+btnWebSlinger.Parent = MainFrame
+Instance.new("UICorner",btnWebSlinger).CornerRadius=UDim.new(0,10)
+
+btnWebSlinger.MouseButton1Click:Connect(function()
+    isWebSlingerOn = not isWebSlingerOn
+    if isWebSlingerOn then
+        btnWebSlinger.Text = "Web Slinger Auto Aim: ON"
+        enableWebSlingerAutoAim()
+    else
+        btnWebSlinger.Text = "Web Slinger Auto Aim: OFF"
+        disableWebSlingerAutoAim()
+    end
+end)
+
+-- Highest Value ESP
+local isHighestValueOn = false
+local btnHighestValue = Instance.new("TextButton")
+btnHighestValue.Size = UDim2.new(0, 220, 0, 25)
+btnHighestValue.Position = UDim2.new(0.5, -110, 0, 120)
+btnHighestValue.BackgroundColor3 = Color3.fromRGB(70,70,100)
+btnHighestValue.Text = "Highest Value ESP: OFF"
+btnHighestValue.TextColor3 = Color3.new(1,1,1)
+btnHighestValue.Font = Enum.Font.GothamBold
+btnHighestValue.TextSize = 14
+btnHighestValue.Parent = MainFrame
+Instance.new("UICorner",btnHighestValue).CornerRadius=UDim.new(0,10)
+
+btnHighestValue.MouseButton1Click:Connect(function()
+    isHighestValueOn = not isHighestValueOn
+    if isHighestValueOn then
+        btnHighestValue.Text = "Highest Value ESP: ON"
+        enableHighestValueESP()
+    else
+        btnHighestValue.Text = "Highest Value ESP: OFF"
+        disableHighestValueESP()
+    end
+end)
+
 
 local btnLockTime = Instance.new("TextButton")
 btnLockTime.Size = UDim2.new(0, 220, 0, 25)
