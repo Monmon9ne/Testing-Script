@@ -6,6 +6,7 @@ local TweenService = game:GetService("TweenService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local StarterGui = game:GetService("StarterGui")
 
 local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -26,21 +27,19 @@ ToggleBtn.Position = UDim2.new(0, 10, 0, 10)
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(120, 60, 200) -- tím
 ToggleBtn.Image = "rbxassetid://125271077602364" -- Thay đổi ID này thành ID của hình ảnh của bạn
 ToggleBtn.Parent = ScreenGui
-
 local ToggleCorner = Instance.new("UICorner", ToggleBtn)
 ToggleCorner.CornerRadius = UDim.new(0, 12)
 
 -- // Main Frame (ESP and Fly Menu Toggle)
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 280, 0, 260) -- Kích thước đã điều chỉnh
-MainFrame.Position = UDim2.new(0.5, -140, 0.5, -130) -- Vị trí đã điều chỉnh
+MainFrame.Size = UDim2.new(0, 280, 0, 300) -- Kích thước đã điều chỉnh
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -150) -- Vị trí đã điều chỉnh
 MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 MainFrame.Draggable = true
 MainFrame.Active = true
 MainFrame.Visible = true
-
 local MainFrameCorner = Instance.new("UICorner", MainFrame)
 MainFrameCorner.CornerRadius = UDim.new(0, 12)
 local MainFrameStroke = Instance.new("UIStroke", MainFrame)
@@ -74,7 +73,7 @@ BtnCornerVoidPlayer.CornerRadius = UDim.new(0, 10)
 -- // ESP Section
 local espLabel = Instance.new("TextLabel")
 espLabel.Size = UDim2.new(1, 0, 0, 20)
-espLabel.Position = UDim2.new(0, 0, 0, 70)
+espLabel.Position = UDim2.new(0, 0, 0, 75) -- Vị trí đã điều chỉnh
 espLabel.BackgroundTransparency = 1
 espLabel.Text = "-- ESP Toggles --"
 espLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -83,29 +82,20 @@ espLabel.TextSize = 14
 espLabel.Parent = MainFrame
 
 -- // ==== NAMLESS FEATURES (Web Slinger Auto Aim + Highest Value ESP) ====
-
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local StarterGui = game:GetService("StarterGui")
-local Workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
-local player = Players.LocalPlayer
-
 -- ========== WEBSLINGER AUTO AIM ==========
 local webSlingerConnection = nil
 local webSlingerAutoAimEnabled = false
 
 function enableWebSlingerAutoAim()
     if webSlingerConnection then webSlingerConnection:Disconnect() end
-
-    local tool = player.Backpack:FindFirstChild("Web Slinger") or (player.Character and player.Character:FindFirstChild("Web Slinger"))
+    local tool = LocalPlayer.Backpack:FindFirstChild("Web Slinger") or (character and character:FindFirstChild("Web Slinger"))
     if not tool then
         local args = {"Web Slinger"}
         pcall(function()
             ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RF/CoinsShopService/RequestBuy"):InvokeServer(unpack(args))
         end)
         task.wait(1)
-        tool = player.Backpack:FindFirstChild("Web Slinger") or (player.Character and player.Character:FindFirstChild("Web Slinger"))
+        tool = LocalPlayer.Backpack:FindFirstChild("Web Slinger") or (character and character:FindFirstChild("Web Slinger"))
         if not tool then
             StarterGui:SetCore("SendNotification",{Title="Web Slinger Auto Aim",Text="Failed to get Web Slinger",Duration=3})
             return
@@ -114,13 +104,12 @@ function enableWebSlingerAutoAim()
 
     webSlingerAutoAimEnabled = true
     StarterGui:SetCore("SendNotification",{Title="Web Slinger Auto Aim",Text="ON",Duration=2})
-
     local handle = tool:WaitForChild("Handle")
 
     local function findNearestPlayer()
         local closest, dist = nil, math.huge
         for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local hum = plr.Character:FindFirstChild("Humanoid")
                 if hum and hum.Health > 0 then
                     local d = (handle.Position - plr.Character.HumanoidRootPart.Position).Magnitude
@@ -137,10 +126,10 @@ function enableWebSlingerAutoAim()
     webSlingerConnection = tool.Activated:Connect(function()
         local target = findNearestPlayer()
         if target and target.Character then
-            local hrp = target.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                local pos = hrp.Position
-                local args = {vector.create(pos.X, pos.Y, pos.Z), hrp, handle}
+            local targetHrp = target.Character:FindFirstChild("HumanoidRootPart")
+            if targetHrp then
+                local pos = targetHrp.Position
+                local args = {vector.create(pos.X, pos.Y, pos.Z), targetHrp, handle}
                 ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/UseItem"):FireServer(unpack(args))
                 StarterGui:SetCore("SendNotification",{Title="Web Slinger Auto Aim",Text="Fired at "..target.Name,Duration=2})
             end
@@ -149,133 +138,198 @@ function enableWebSlingerAutoAim()
 end
 
 function disableWebSlingerAutoAim()
-    if webSlingerConnection then webSlingerConnection:Disconnect() webSlingerConnection=nil end
+    if webSlingerConnection then webSlingerConnection:Disconnect(); webSlingerConnection=nil end
     webSlingerAutoAimEnabled = false
     StarterGui:SetCore("SendNotification",{Title="Web Slinger Auto Aim",Text="OFF",Duration=2})
 end
 
 
--- ========== HIGHEST VALUE ESP ==========
+-- ========== HIGHEST VALUE ESP (FIXED) ==========
+
 local highestValueEnabled = false
-local espConnections = {}
+local currentHighestGui = nil
+local scanConnection = nil
 
 local function extractNumber(str)
     if not str then return 0 end
-    local numberStr = str:match("%$(.-)/s")
+    local numberStr = str:match("%$(.-)/s") or str:match("(%d+%.?%d*)[kmb]?")
     if not numberStr then return 0 end
-    numberStr = numberStr:gsub("%s","")
-    local mult = 1
-    if numberStr:lower():find("k") then mult=1_000 numberStr=numberStr:gsub("[kK]","")
-    elseif numberStr:lower():find("m") then mult=1_000_000 numberStr=numberStr:gsub("[mM]","")
-    elseif numberStr:lower():find("b") then mult=1_000_000_000 numberStr=numberStr:gsub("[bB]","")
+    numberStr = numberStr:gsub("%s", "")
+    local multiplier = 1
+    if str:lower():find("k") then
+        multiplier = 1000
+        numberStr = numberStr:gsub("[kK]", "")
+    elseif str:lower():find("m") then
+        multiplier = 1000000
+        numberStr = numberStr:gsub("[mM]", "")
+    elseif str:lower():find("b") then
+        multiplier = 1000000000
+        numberStr = numberStr:gsub("[bB]", "")
     end
-    return (tonumber(numberStr) or 0)*mult
+    return (tonumber(numberStr) or 0) * multiplier
 end
 
 local mutationColors = {
-    Gold = Color3.fromRGB(255,215,0),
-    Diamond = Color3.fromRGB(0,255,255),
-    Lava = Color3.fromRGB(255,100,0),
-    Bloodrot = Color3.fromRGB(255,0,0),
+    Gold = Color3.fromRGB(255, 215, 0),
+    Diamond = Color3.fromRGB(0, 255, 255),
+    Lava = Color3.fromRGB(255, 100, 0),
+    Bloodrot = Color3.fromRGB(255, 0, 0),
 }
 
-local function getMutationTextAndColor(mutationLabel)
-    if not mutationLabel or mutationLabel.Visible==false then return "Default", Color3.new(1,1,1) end
-    local name = mutationLabel.Text
-    if name == "Rainbow" then return "Rainbow", Color3.new(1,1,1) end
-    return name, mutationColors[name] or Color3.new(1,1,1)
+local function getMutationTextAndColor(mutation)
+    if not mutation or not mutation.Visible then
+        return "Default", Color3.fromRGB(255, 255, 255)
+    end
+    local name = mutation.Text
+    if name == "Rainbow" then
+        return "Rainbow", Color3.new(1, 1, 1)
+    end
+    return name, mutationColors[name] or Color3.fromRGB(255, 255, 255)
 end
 
 local function createGui(base, labels)
-    if base:FindFirstChild("StatGui") then base.StatGui:Destroy() end
-    local gui = Instance.new("BillboardGui")
-    gui.Name="StatGui"
-    gui.Size=UDim2.new(0,200,0,60)
-    gui.StudsOffset=Vector3.new(0,3,0)
-    gui.AlwaysOnTop=true
-    gui.Adornee=base
-    gui.Parent=base
-
-    local function makeLabel(order,text,color)
-        local label=Instance.new("TextLabel")
-        label.Size=UDim2.new(1,0,0.25,0)
-        label.Position=UDim2.new(0,0,0.25*(order-1),0)
-        label.BackgroundTransparency=1
-        label.TextScaled=true
-        label.TextStrokeTransparency=0.5
-        label.Font=Enum.Font.SourceSansBold
-        label.Text=text
-        label.TextColor3=color or Color3.new(1,1,1)
-        label.Parent=gui
+    if base:FindFirstChild("StatGui") then
+        base.StatGui:Destroy()
     end
 
-    makeLabel(1,labels.DisplayName,Color3.new(1,1,1))
-    makeLabel(2,labels.Generation,Color3.new(0.8,0.8,0.8))
-    makeLabel(3,labels.Mutation,labels.MutationColor or Color3.new(1,1,1))
-    makeLabel(4,labels.Rarity,Color3.new(0.5,1,0.5))
+    local gui = Instance.new("BillboardGui")
+    gui.Name = "StatGui"
+    gui.Size = UDim2.new(0, 200, 0, 60)
+    gui.StudsOffset = Vector3.new(0, 3, 0)
+    gui.AlwaysOnTop = true
+    gui.Adornee = base
+    gui.Parent = base
+
+    local function createLabel(order, text, color)
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 0.25, 0)
+        label.Position = UDim2.new(0, 0, 0.25 * (order - 1), 0)
+        label.BackgroundTransparency = 1
+        label.TextScaled = true
+        label.Font = Enum.Font.SourceSansBold
+        label.TextStrokeTransparency = 0.5
+        label.Text = text or "N/A"
+        label.TextColor3 = color or Color3.fromRGB(255, 255, 255)
+        label.Name = "StatLine"
+        label.Parent = gui
+    end
+
+    createLabel(1, labels.DisplayName, Color3.new(1,1,1))
+    createLabel(2, labels.Generation, Color3.new(0.8,0.8,0.8))
+    createLabel(3, labels.Mutation, labels.MutationColor or Color3.new(1,1,1))
+    createLabel(4, labels.Rarity, Color3.new(0.5,1,0.5))
+
+    return gui
 end
 
-local function scanHighestValue()
-    for _,plot in pairs(Workspace:WaitForChild("Plots"):GetChildren()) do
-        local purchases=plot:FindFirstChild("Purchases")
-        if purchases then
-            local highestVal,highestMain=0,nil
-            for _,purchase in pairs(purchases:GetChildren()) do
-                local main=purchase:FindFirstChild("Main")
-                local gui=main and main:FindFirstChild("BillboardGui")
-                local rem=gui and gui:FindFirstChild("RemainingTime")
-                local rarity=gui and gui:FindFirstChild("Rarity")
-                local generation=gui and gui:FindFirstChild("Generation")
-                local mutation=gui and gui:FindFirstChild("Mutation")
-                if main and rem and rarity and generation then
-                    local val=extractNumber(rem.Text)
-                    if val>highestVal then
-                        highestVal=val
-                        local mutationText,mutationColor=getMutationTextAndColor(mutation)
-                        highestMain={base=main,labels={
-                            DisplayName=rarity.Text,
-                            Generation=generation.Text,
-                            Mutation=mutationText,
-                            MutationColor=mutationColor,
-                            Rarity=rem.Text
-                        }}
+local function getAllPodiums()
+    local podiums = {}
+    for _, plot in pairs(Workspace:WaitForChild("Plots"):GetChildren()) do
+        local animalPods = plot:FindFirstChild("AnimalPodiums")
+        if animalPods then
+            for _, pod in pairs(animalPods:GetChildren()) do
+                local base = pod:FindFirstChild("Base")
+                if base and base:FindFirstChild("Spawn") then
+                    local attach = base.Spawn:FindFirstChild("Attachment")
+                    if attach and attach:FindFirstChild("AnimalOverhead") then
+                        table.insert(podiums, attach.AnimalOverhead)
                     end
                 end
             end
-            if highestMain then
-                createGui(highestMain.base,highestMain.labels)
-            end
         end
     end
+    return podiums
 end
 
 function enableHighestValueESP()
-    highestValueEnabled=true
-    StarterGui:SetCore("SendNotification",{Title="Highest Value ESP",Text="ON",Duration=2})
-    espConnections["Loop"]=RunService.Heartbeat:Connect(function()
-        if highestValueEnabled then pcall(scanHighestValue) end
+    highestValueEnabled = true
+    StarterGui:SetCore("SendNotification", {Title = "Highest Value ESP", Text = "ON", Duration = 2})
+
+    scanConnection = RunService.Heartbeat:Connect(function()
+        if not highestValueEnabled then return end
+
+        local bestValue = -1
+        local bestPodiumInfo = nil
+
+        for _, overhead in pairs(getAllPodiums()) do
+            local genLabel = overhead:FindFirstChild("Generation")
+            if genLabel then
+                local genValue = extractNumber(genLabel.Text)
+                if genValue > bestValue then
+                    bestValue = genValue
+                    local mutationLabel = overhead:FindFirstChild("Mutation")
+                    local mutText, mutColor = getMutationTextAndColor(mutationLabel)
+                    bestPodiumInfo = {
+                        base = overhead.Parent.Parent.Parent,
+                        labels = {
+                            DisplayName = overhead:FindFirstChild("DisplayName") and overhead.DisplayName.Text or "Unknown",
+                            Generation = genLabel.Text,
+                            Mutation = mutText,
+                            MutationColor = mutColor,
+                            Rarity = overhead:FindFirstChild("Rarity") and overhead.Rarity.Text or "None"
+                        }
+                    }
+                end
+            end
+        end
+
+        if currentHighestGui and (not bestPodiumInfo or currentHighestGui.Adornee ~= bestPodiumInfo.base) then
+            currentHighestGui:Destroy()
+            currentHighestGui = nil
+        end
+
+        if bestPodiumInfo and (not currentHighestGui or currentHighestGui.Adornee ~= bestPodiumInfo.base) then
+             if currentHighestGui then currentHighestGui:Destroy() end
+            currentHighestGui = createGui(bestPodiumInfo.base, bestPodiumInfo.labels)
+        end
     end)
 end
 
 function disableHighestValueESP()
-    highestValueEnabled=false
-    StarterGui:SetCore("SendNotification",{Title="Highest Value ESP",Text="OFF",Duration=2})
-    if espConnections["Loop"] then espConnections["Loop"]:Disconnect() espConnections["Loop"]=nil end
-    for _,plot in pairs(Workspace:WaitForChild("Plots"):GetChildren()) do
-        local purchases=plot:FindFirstChild("Purchases")
-        if purchases then
-            for _,purchase in pairs(purchases:GetChildren()) do
-                local main=purchase:FindFirstChild("Main")
-                if main and main:FindFirstChild("StatGui") then main.StatGui:Destroy() end
-            end
-        end
+    highestValueEnabled = false
+    StarterGui:SetCore("SendNotification", {Title = "Highest Value ESP", Text = "OFF", Duration = 2})
+
+    if scanConnection then
+        scanConnection:Disconnect()
+        scanConnection = nil
+    end
+
+    if currentHighestGui then
+        currentHighestGui:Destroy()
+        currentHighestGui = nil
     end
 end
 
 
+-- // BẮT ĐẦU: Các nút đã thêm
+local btnWebSlinger = Instance.new("TextButton")
+btnWebSlinger.Size = UDim2.new(0, 220, 0, 25)
+btnWebSlinger.Position = UDim2.new(0.5, -110, 0, 100)
+btnWebSlinger.BackgroundColor3 = Color3.fromRGB(70, 70, 100)
+btnWebSlinger.Text = "Web Slinger Auto Aim: OFF"
+btnWebSlinger.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnWebSlinger.Font = Enum.Font.GothamBold
+btnWebSlinger.TextSize = 14
+btnWebSlinger.Parent = MainFrame
+local BtnCornerWebSlinger = Instance.new("UICorner", btnWebSlinger)
+BtnCornerWebSlinger.CornerRadius = UDim.new(0, 10)
+
+local btnHighestValue = Instance.new("TextButton")
+btnHighestValue.Size = UDim2.new(0, 220, 0, 25)
+btnHighestValue.Position = UDim2.new(0.5, -110, 0, 130)
+btnHighestValue.BackgroundColor3 = Color3.fromRGB(70, 70, 100)
+btnHighestValue.Text = "Highest Value ESP: OFF"
+btnHighestValue.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnHighestValue.Font = Enum.Font.GothamBold
+btnHighestValue.TextSize = 14
+btnHighestValue.Parent = MainFrame
+local BtnCornerHighestValue = Instance.new("UICorner", btnHighestValue)
+BtnCornerHighestValue.CornerRadius = UDim.new(0, 10)
+
+-- // KẾT THÚC: Các nút đã thêm
 local btnLockTime = Instance.new("TextButton")
 btnLockTime.Size = UDim2.new(0, 220, 0, 25)
-btnLockTime.Position = UDim2.new(0.5, -110, 0, 150)
+btnLockTime.Position = UDim2.new(0.5, -110, 0, 160) -- Vị trí đã điều chỉnh
 btnLockTime.BackgroundColor3 = Color3.fromRGB(70, 70, 100)
 btnLockTime.Text = "Lock Time: OFF"
 btnLockTime.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -287,7 +341,7 @@ BtnCornerLockTime.CornerRadius = UDim.new(0, 10)
 
 local btnPlayer = Instance.new("TextButton")
 btnPlayer.Size = UDim2.new(0, 220, 0, 25)
-btnPlayer.Position = UDim2.new(0.5, -110, 0, 180)
+btnPlayer.Position = UDim2.new(0.5, -110, 0, 190) -- Vị trí đã điều chỉnh
 btnPlayer.BackgroundColor3 = Color3.fromRGB(70, 70, 100)
 btnPlayer.Text = "Player ESP: OFF"
 btnPlayer.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -300,7 +354,7 @@ BtnCornerPlayer.CornerRadius = UDim.new(0, 10)
 -- // Fly Menu Toggle Button
 local FlyMenuToggleBtn = Instance.new("TextButton")
 FlyMenuToggleBtn.Size = UDim2.new(0, 220, 0, 36)
-FlyMenuToggleBtn.Position = UDim2.new(0.5, -110, 0, 210)
+FlyMenuToggleBtn.Position = UDim2.new(0.5, -110, 0, 220) -- Vị trí đã điều chỉnh
 FlyMenuToggleBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 100)
 FlyMenuToggleBtn.Text = "Fly Menu: OFF"
 FlyMenuToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -320,7 +374,6 @@ FlyMenuFrame.Parent = ScreenGui
 FlyMenuFrame.Draggable = true
 FlyMenuFrame.Active = true
 FlyMenuFrame.Visible = false
-
 local FlyMenuCorner = Instance.new("UICorner", FlyMenuFrame)
 FlyMenuCorner.CornerRadius = UDim.new(0, 12)
 local FlyMenuStroke = Instance.new("UIStroke", FlyMenuFrame)
@@ -377,7 +430,7 @@ Label.TextSize = 16
 Label.Parent = FlyMenuFrame
 
 -- // Toggle ẩn/hiện GUI chính
-local isMainGuiOpen = false
+local isMainGuiOpen = true
 ToggleBtn.MouseButton1Click:Connect(function()
     isMainGuiOpen = not isMainGuiOpen
     MainFrame.Visible = isMainGuiOpen
@@ -407,26 +460,12 @@ local originalJumpPower = humanoid.JumpPower
 local originalGravity = Workspace.Gravity
 
 -- ESP Variables
-local myPlotName = nil
-for _, plot in ipairs(Workspace.Plots:GetChildren()) do
-    local yourBase = plot:FindFirstChild("YourBase", true)
-    if yourBase and yourBase:IsA("BoolValue") and yourBase.Value == true then
-        myPlotName = plot.Name
-        break
-    end
-end
-
-local isBrainrotGodESPEnabled = false
-local isSecretESPEnabled = false
 local isLockTimeESPEnabled = false
 local isPlayerESPEnabled = false
 
-local brainrotGodESPConnection = nil
-local secretESPConnection = nil
 local lockTimeESPConnection = nil
 local playerESPConnection = nil
 
-local espBrainrotBillboards = {}
 local lockESPInstances = {}
 local espPlayerBillboards = {}
 
@@ -443,7 +482,6 @@ LocalPlayer.CharacterAdded:Connect(function(newCharacter)
     hrp = newCharacter:WaitForChild("HumanoidRootPart")
     updateStatus("Idle")
     print("Character respawned, status reset to Idle")
-
     -- Reset Superman Mode on respawn
     if isSupermanModeActive then
         isSupermanModeActive = false
@@ -488,11 +526,9 @@ local function setupFlight()
     if hrp:FindFirstChildOfClass("LinearVelocity") then
         hrp:FindFirstChildOfClass("LinearVelocity"):Destroy()
     end
-
     local attachment = Instance.new("Attachment")
     attachment.Name = "FlightAttachment"
     attachment.Parent = hrp
-
     local lv = Instance.new("LinearVelocity")
     lv.Attachment0 = attachment
     lv.RelativeTo = Enum.ActuatorRelativeTo.World
@@ -509,25 +545,20 @@ local function moveToDelivery()
         updateStatus("No delivery target found")
         return
     end
-
     for _, obj in ipairs(hrp:GetChildren()) do
         if obj:IsA("LinearVelocity") or obj:IsA("Attachment") then
             obj:Destroy()
         end
     end
-
     local lv, attachment = setupFlight()
     local currentY = hrp.Position.Y
     updateStatus("Flying to delivery...")
     hrp.CFrame = hrp.CFrame + Vector3.new(0, 0, 0)
     task.wait(0.2)
-
     local speed = 41
-
     local reached = false
     local maxTime = 8
     local startTime = tick()
-
     local connection
     connection = RunService.Heartbeat:Connect(function()
         if not isMoving then
@@ -536,7 +567,6 @@ local function moveToDelivery()
             connection:Disconnect()
             return
         end
-
         if not targetHitbox or not targetHitbox:IsDescendantOf(Workspace) then
             warn("Target lost during flight")
             updateStatus("Delivery target lost")
@@ -546,11 +576,9 @@ local function moveToDelivery()
             reached = true
             return
         end
-
         local targetPos = targetHitbox.Position - Vector3.new(0, 6, 0)
         local direction = (targetPos - hrp.Position)
         local distance = direction.Magnitude
-
         if distance <= 0.5 then
             updateStatus("Reached delivery target")
             lv.VectorVelocity = Vector3.zero
@@ -564,7 +592,6 @@ local function moveToDelivery()
             end
             return
         end
-
         if tick() - startTime >= maxTime then
             warn("Timeout before reaching delivery target")
             updateStatus("Timeout during delivery")
@@ -574,18 +601,14 @@ local function moveToDelivery()
             reached = true
             return
         end
-
         local unitDir = direction.Unit
         lv.VectorVelocity = Vector3.new(unitDir.X * speed, unitDir.Y * speed, unitDir.Z * speed)
         updateStatus("Moving to delivery, distance: " .. math.floor(distance))
     end)
-
     while not reached do
         task.wait(0.12)
     end
-
     if not isMoving then return end
-
     updateStatus("Starting smooth deceleration...")
     lv, attachment = setupFlight()
     for i = 1, 12 do
@@ -602,9 +625,7 @@ local function moveToDelivery()
         task.wait(0.05)
     end
     lv:Destroy()
-
     if not isMoving then return end
-
     updateStatus("Starting smooth descent...")
     lv, attachment = setupFlight()
     local targetY = targetHitbox.Position.Y - 6 + 2.5
@@ -617,7 +638,6 @@ local function moveToDelivery()
             reachedY = true
             return
         end
-
         if hrp.Position.Y <= targetY then
             lv.VectorVelocity = Vector3.zero
             lv:Destroy()
@@ -633,11 +653,9 @@ local function moveToDelivery()
         lv.VectorVelocity = Vector3.new(0, -speed, 0)
         updateStatus("Descending, current Y: " .. math.floor(hrp.Position.Y))
     end)
-
     while not reachedY do
         task.wait(0.05)
     end
-
     updateStatus("Cleaning up objects...")
     task.delay(0.5, function()
         if attachment then attachment:Destroy() end
@@ -658,8 +676,8 @@ end
 
 local function isSizeClose(partSize, targetSize, tolerance)
     return math.abs(partSize.X - targetSize.X) <= tolerance
-        and math.abs(partSize.Y - targetSize.Y) <= tolerance
-        and math.abs(partSize.Z - targetSize.Z) <= tolerance
+    and math.abs(partSize.Y - targetSize.Y) <= tolerance
+    and math.abs(partSize.Z - targetSize.Z) <= tolerance
 end
 
 local function getTargetForFloor(level, fromThirdFloor)
@@ -771,7 +789,6 @@ local function moveUntil(conditionFunc, directionFunc, callback)
             conn:Disconnect()
             return
         end
-
         if conditionFunc() then
             hrp.Velocity = Vector3.zero
             conn:Disconnect()
@@ -805,7 +822,6 @@ local function moveUntilLinear(conditionFunc, directionFunc, callback)
             conn:Disconnect()
             return
         end
-
         if conditionFunc() then
             lv.VectorVelocity = Vector3.zero
             lv:Destroy()
@@ -833,7 +849,6 @@ local function moveToTarget(target, level, fromThirdFloor)
         StartBtn.Text = "Start Process"
         return
     end
-
     local tolerance = 0.5
     updateStatus("Moving to target...")
     moveUntil(
@@ -926,7 +941,6 @@ local function checkArmRotation()
     if not character then return end
     local leftArm = character:FindFirstChild("LeftUpperArm")
     if not leftArm then return end
-    
     return math.deg(leftArm.Orientation.X) > 60
 end
 
@@ -945,12 +959,10 @@ local function startProcess()
         isActive = false
         StartBtn.Text = "Start Process"
         updateStatus("Process canceled")
-        
         if promptConnection then
             promptConnection:Disconnect()
             promptConnection = nil
         end
-        
         if armCheckConnection then
             armCheckConnection:Disconnect()
             armCheckConnection = nil
@@ -960,30 +972,24 @@ local function startProcess()
         promptTriggered = false
         StartBtn.Text = "Waiting..."
         updateStatus("Waiting for prompt and arm rotation...")
-
         promptConnection = ProximityPromptService.PromptTriggered:Connect(handlePromptTriggered)
-
         armCheckConnection = RunService.Heartbeat:Connect(function()
             if not isActive then
                 armCheckConnection:Disconnect()
                 return
             end
-
             if promptTriggered and checkArmRotation() then
                 isMoving = true
                 isActive = false
                 StartBtn.Text = "Cancel"
-                
                 if promptConnection then
                     promptConnection:Disconnect()
                     promptConnection = nil
                 end
-                
                 if armCheckConnection then
                     armCheckConnection:Disconnect()
                     armCheckConnection = nil
                 end
-
                 updateStatus("Starting process...")
                 local currentY = hrp.Position.Y
                 local level = currentY <= 8 and 1 or (currentY <= 24 and 2 or 3)
@@ -1004,107 +1010,6 @@ local function startProcess()
 end
 
 -- === ESP Functions ===
-local RaritySettings = {
-    ["Brainrot God"] = {Color = Color3.fromRGB(128,0,128), Size=UDim2.new(0,100,0,20)},
-    ["Secret"] = {Color = Color3.fromRGB(0,0,0), Size=UDim2.new(0,100,0,20)}
-}
-
-local function removeBrainrotESP()
-    for _, bb in ipairs(espBrainrotBillboards) do
-        if bb and bb.Parent then bb:Destroy() end
-    end
-    espBrainrotBillboards = {}
-end
-
-local function createBrainrotESP(mobModel, mobName, color, size)
-    if mobModel:FindFirstChild(mobName.."_ESP") then return end
-    local bb = Instance.new("BillboardGui")
-    bb.Name = mobName.."_ESP"
-    bb.Size = size
-    bb.StudsOffset = Vector3.new(0,2,0)
-    bb.AlwaysOnTop = true
-    bb.Parent = mobModel
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1,0,1,0)
-    label.BackgroundTransparency = 1
-    label.Text = mobName -- Hiển thị tên mob
-    label.TextColor3 = color
-    label.TextStrokeColor3 = Color3.new(1,1,1)
-    label.TextStrokeTransparency = 0.5
-    label.TextScaled = true
-    label.Font = Enum.Font.GothamBold
-    label.Parent = bb
-
-    table.insert(espBrainrotBillboards, bb)
-end
-
-local function toggleBrainrotGodESP()
-    isBrainrotGodESPEnabled = not isBrainrotGodESPEnabled
-    if isBrainrotGodESPEnabled then
-        btnBrainrotGod.Text = "Brainrot God: ON"
-        brainrotGodESPConnection = RunService.Heartbeat:Connect(function()
-            if not isBrainrotGodESPEnabled then
-                brainrotGodESPConnection:Disconnect()
-                return
-            end
-            removeBrainrotESP()
-            for _, plot in pairs(Workspace.Plots:GetChildren()) do
-                if plot.Name ~= myPlotName then
-                    for _, child in ipairs(plot:GetDescendants()) do
-                        if child:IsA("TextLabel") and child.Name=="Rarity" and child.Text=="Brainrot God" then
-                            local mobModel = child.Parent.Parent
-                            if mobModel then
-                                createBrainrotESP(mobModel, child.Parent.DisplayName.Text, RaritySettings[child.Text].Color, RaritySettings[child.Text].Size)
-                            end
-                        end
-                    end
-                end
-            end
-        end)
-    else
-        btnBrainrotGod.Text = "Brainrot God: OFF"
-        if brainrotGodESPConnection then
-            brainrotGodESPConnection:Disconnect()
-            brainrotGodESPConnection = nil
-        end
-        removeBrainrotESP()
-    end
-end
-
-local function toggleSecretESP()
-    isSecretESPEnabled = not isSecretESPEnabled
-    if isSecretESPEnabled then
-        btnSecret.Text = "Secret: ON"
-        secretESPConnection = RunService.Heartbeat:Connect(function()
-            if not isSecretESPEnabled then
-                secretESPConnection:Disconnect()
-                return
-            end
-            removeBrainrotESP()
-            for _, plot in pairs(Workspace.Plots:GetChildren()) do
-                if plot.Name ~= myPlotName then
-                    for _, child in ipairs(plot:GetDescendants()) do
-                        if child:IsA("TextLabel") and child.Name=="Rarity" and child.Text=="Secret" then
-                            local mobModel = child.Parent.Parent
-                            if mobModel then
-                                createBrainrotESP(mobModel, child.Parent.DisplayName.Text, RaritySettings[child.Text].Color, RaritySettings[child.Text].Size)
-                            end
-                        end
-                    end
-                end
-            end
-        end)
-    else
-        btnSecret.Text = "Secret: OFF"
-        if secretESPConnection then
-            secretESPConnection:Disconnect()
-            secretESPConnection = nil
-        end
-        removeBrainrotESP()
-    end
-end
-
 local function removeLockESP()
     for _, instance in pairs(lockESPInstances) do
         if instance and instance.Parent then
@@ -1190,7 +1095,6 @@ end
 local function createPlayerESP(character, playerName)
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     if character:FindFirstChild("MonHubPlayerESP") then return end
-
     local rootPart = character.HumanoidRootPart
     local bb = Instance.new("BillboardGui")
     bb.Name = "MonHubPlayerESP"
@@ -1198,7 +1102,6 @@ local function createPlayerESP(character, playerName)
     bb.Size = UDim2.new(0,150,0,30)
     bb.AlwaysOnTop = true
     bb.Parent = character
-
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1,0,1,0)
     label.BackgroundTransparency = 1
@@ -1208,7 +1111,6 @@ local function createPlayerESP(character, playerName)
     label.TextScaled = true
     label.Font = Enum.Font.GothamBold
     label.Parent = bb
-
     table.insert(espPlayerBillboards, bb)
 end
 
@@ -1243,7 +1145,6 @@ local voidPlayerGui = Instance.new("ScreenGui")
 voidPlayerGui.Name = "VoidPlayerGui"
 voidPlayerGui.Parent = playerGui
 voidPlayerGui.ResetOnSpawn = false
-
 local tpMainFrame = Instance.new("Frame", voidPlayerGui)
 tpMainFrame.Size = UDim2.new(0, 250, 0, 200)
 tpMainFrame.Position = UDim2.new(0.35, 0, 0.3, 0)
@@ -1252,14 +1153,12 @@ tpMainFrame.BorderSizePixel = 0
 tpMainFrame.Active = true
 tpMainFrame.Draggable = true
 tpMainFrame.Visible = false -- Bắt đầu ẩn
-
 local tpTitle = Instance.new("TextLabel", tpMainFrame)
 tpTitle.Size = UDim2.new(1, 0, 0, 30)
 tpTitle.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 tpTitle.Text = "Mon Hub - Player TP"
 tpTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 tpTitle.TextScaled = true
-
 local tpPlayerList = Instance.new("TextButton", tpMainFrame)
 tpPlayerList.Size = UDim2.new(1, -20, 0, 30)
 tpPlayerList.Position = UDim2.new(0, 10, 0, 40)
@@ -1267,14 +1166,12 @@ tpPlayerList.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
 tpPlayerList.Text = "Select Player"
 tpPlayerList.TextColor3 = Color3.fromRGB(255, 255, 255)
 tpPlayerList.TextScaled = true
-
 local tpListFrame = Instance.new("ScrollingFrame", tpMainFrame)
 tpListFrame.Size = UDim2.new(1, -20, 0, 80)
 tpListFrame.Position = UDim2.new(0, 10, 0, 75)
 tpListFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
 tpListFrame.ScrollBarThickness = 6
 tpListFrame.Visible = false
-
 local tpStartBtn = Instance.new("TextButton", tpMainFrame)
 tpStartBtn.Size = UDim2.new(0.5, -15, 0, 30)
 tpStartBtn.Position = UDim2.new(0, 10, 0, 160)
@@ -1282,7 +1179,6 @@ tpStartBtn.BackgroundColor3 = Color3.fromRGB(40, 150, 60)
 tpStartBtn.Text = "Start"
 tpStartBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 tpStartBtn.TextScaled = true
-
 local tpStopBtn = Instance.new("TextButton", tpMainFrame)
 tpStopBtn.Size = UDim2.new(0.5, -15, 0, 30)
 tpStopBtn.Position = UDim2.new(0.5, 5, 0, 160)
@@ -1354,8 +1250,8 @@ end)
 
 tpStopBtn.MouseButton1Click:Connect(function()
     running = false
-    if tpConn then tpConn:Disconnect() tpConn = nil end
-    if flingConn then flingConn:Disconnect() flingConn = nil end
+    if tpConn then tpConn:Disconnect(); tpConn = nil end
+    if flingConn then flingConn:Disconnect(); flingConn = nil end
 end)
 
 LocalPlayer.CharacterAdded:Connect(function(char)
@@ -1363,6 +1259,7 @@ LocalPlayer.CharacterAdded:Connect(function(char)
         setupTP(char)
     end
 end)
+
 -- === BUTTON CLICK EVENT HANDLERS ===
 StartBtn.MouseButton1Click:Connect(function()
     if isMoving then
@@ -1429,10 +1326,32 @@ SupermanBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-btnBrainrotGod.MouseButton1Click:Connect(toggleBrainrotGodESP)
-btnSecret.MouseButton1Click:Connect(toggleSecretESP)
+-- // BẮT ĐẦU: Các kết nối sự kiện đã thêm/sửa đổi
+btnWebSlinger.MouseButton1Click:Connect(function()
+    webSlingerAutoAimEnabled = not webSlingerAutoAimEnabled
+    if webSlingerAutoAimEnabled then
+        enableWebSlingerAutoAim()
+        btnWebSlinger.Text = "Web Slinger Auto Aim: ON"
+    else
+        disableWebSlingerAutoAim()
+        btnWebSlinger.Text = "Web Slinger Auto Aim: OFF"
+    end
+end)
+
+btnHighestValue.MouseButton1Click:Connect(function()
+    highestValueEnabled = not highestValueEnabled
+    if highestValueEnabled then
+        enableHighestValueESP()
+        btnHighestValue.Text = "Highest Value ESP: ON"
+    else
+        disableHighestValueESP()
+        btnHighestValue.Text = "Highest Value ESP: OFF"
+    end
+end)
+
 btnLockTime.MouseButton1Click:Connect(toggleLockTimeESP)
 btnPlayer.MouseButton1Click:Connect(togglePlayerESP)
+
 -- New: Toggle Void Player
 btnVoidPlayer.MouseButton1Click:Connect(function()
     isVoidPlayerActive = not isVoidPlayerActive
@@ -1444,69 +1363,7 @@ btnVoidPlayer.MouseButton1Click:Connect(function()
     else
         tpMainFrame.Visible = false
         running = false
-        if tpConn then tpConn:Disconnect() tpConn = nil end
-        if flingConn then flingConn:Disconnect() flingConn = nil end
-    end
-end)
-
--- Services
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local rootPart = character:WaitForChild("HumanoidRootPart")
-
--- Settings
-local jumpPower = 50
-local loopJump = false
-local yOffset = -50 -- xích lên
-
--- Jump function
-local function InfJump()
-    if rootPart then
-        rootPart.Velocity = Vector3.new(rootPart.Velocity.X, 0, rootPart.Velocity.Z) + Vector3.new(0, jumpPower, 0)
-    end
-end
-
--- GUI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = player:WaitForChild("PlayerGui")
-
--- Invisible overlay button
-local LoopJumpButton = Instance.new("TextButton")
-LoopJumpButton.Size = UDim2.new(0, 100, 0, 100)
-LoopJumpButton.Position = UDim2.new(0.85, 0, 0.8, 0 + yOffset)
-LoopJumpButton.BackgroundTransparency = 1 -- hoàn toàn invisible
-LoopJumpButton.Text = "" -- không text
-LoopJumpButton.TextTransparency = 1
-LoopJumpButton.Parent = ScreenGui
-
--- Mobile hold events
-LoopJumpButton.MouseButton1Down:Connect(function()
-    loopJump = true
-end)
-LoopJumpButton.MouseButton1Up:Connect(function()
-    loopJump = false
-end)
-
--- PC fallback
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Space then
-        loopJump = true
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Space then
-        loopJump = false
-    end
-end)
-
--- Loop jump
-RunService.RenderStepped:Connect(function()
-    if loopJump then
-        InfJump()
+        if tpConn then tpConn:Disconnect(); tpConn = nil end
+        if flingConn then flingConn:Disconnect(); flingConn = nil end
     end
 end)
