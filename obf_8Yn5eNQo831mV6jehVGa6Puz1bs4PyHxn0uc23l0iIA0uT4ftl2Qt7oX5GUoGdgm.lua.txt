@@ -82,9 +82,8 @@ espLabel.Font = Enum.Font.Gotham
 espLabel.TextSize = 14
 espLabel.Parent = MainFrame
 
--- Mon Hub GUI (Web Slinger Auto Aim + Highest Value ESP)
+-- // ==== NAMLESS FEATURES (Web Slinger Auto Aim + Highest Value ESP) ====
 
--- Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui = game:GetService("StarterGui")
@@ -92,33 +91,7 @@ local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
--- GUI Setup
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "MonHubGui"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = game.CoreGui
-
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 250, 0, 350)
-MainFrame.Position = UDim2.new(0.5, -125, 0.5, -175)
-MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.BackgroundTransparency = 1
-Title.Text = "Mon Hub"
-Title.Font = Enum.Font.GothamBold
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 18
-Title.Parent = MainFrame
-
--- ========== LOGIC ==========
-
--- Web Slinger Auto Aim
+-- ========== WEBSLINGER AUTO AIM ==========
 local webSlingerConnection = nil
 local webSlingerAutoAimEnabled = false
 
@@ -182,7 +155,7 @@ function disableWebSlingerAutoAim()
 end
 
 
--- Highest Value ESP
+-- ========== HIGHEST VALUE ESP ==========
 local highestValueEnabled = false
 local espConnections = {}
 
@@ -191,7 +164,7 @@ local function extractNumber(str)
     local numberStr = str:match("%$(.-)/s")
     if not numberStr then return 0 end
     numberStr = numberStr:gsub("%s","")
-    local mult=1
+    local mult = 1
     if numberStr:lower():find("k") then mult=1_000 numberStr=numberStr:gsub("[kK]","")
     elseif numberStr:lower():find("m") then mult=1_000_000 numberStr=numberStr:gsub("[mM]","")
     elseif numberStr:lower():find("b") then mult=1_000_000_000 numberStr=numberStr:gsub("[bB]","")
@@ -298,56 +271,6 @@ function disableHighestValueESP()
         end
     end
 end
-
--- ========== BUTTONS ==========
-
--- Web Slinger Auto Aim
-local isWebSlingerOn = false
-local btnWebSlinger = Instance.new("TextButton")
-btnWebSlinger.Size = UDim2.new(0, 220, 0, 25)
-btnWebSlinger.Position = UDim2.new(0.5, -110, 0, 90)
-btnWebSlinger.BackgroundColor3 = Color3.fromRGB(70,70,100)
-btnWebSlinger.Text = "Web Slinger Auto Aim: OFF"
-btnWebSlinger.TextColor3 = Color3.new(1,1,1)
-btnWebSlinger.Font = Enum.Font.GothamBold
-btnWebSlinger.TextSize = 14
-btnWebSlinger.Parent = MainFrame
-Instance.new("UICorner",btnWebSlinger).CornerRadius=UDim.new(0,10)
-
-btnWebSlinger.MouseButton1Click:Connect(function()
-    isWebSlingerOn = not isWebSlingerOn
-    if isWebSlingerOn then
-        btnWebSlinger.Text = "Web Slinger Auto Aim: ON"
-        enableWebSlingerAutoAim()
-    else
-        btnWebSlinger.Text = "Web Slinger Auto Aim: OFF"
-        disableWebSlingerAutoAim()
-    end
-end)
-
--- Highest Value ESP
-local isHighestValueOn = false
-local btnHighestValue = Instance.new("TextButton")
-btnHighestValue.Size = UDim2.new(0, 220, 0, 25)
-btnHighestValue.Position = UDim2.new(0.5, -110, 0, 120)
-btnHighestValue.BackgroundColor3 = Color3.fromRGB(70,70,100)
-btnHighestValue.Text = "Highest Value ESP: OFF"
-btnHighestValue.TextColor3 = Color3.new(1,1,1)
-btnHighestValue.Font = Enum.Font.GothamBold
-btnHighestValue.TextSize = 14
-btnHighestValue.Parent = MainFrame
-Instance.new("UICorner",btnHighestValue).CornerRadius=UDim.new(0,10)
-
-btnHighestValue.MouseButton1Click:Connect(function()
-    isHighestValueOn = not isHighestValueOn
-    if isHighestValueOn then
-        btnHighestValue.Text = "Highest Value ESP: ON"
-        enableHighestValueESP()
-    else
-        btnHighestValue.Text = "Highest Value ESP: OFF"
-        disableHighestValueESP()
-    end
-end)
 
 
 local btnLockTime = Instance.new("TextButton")
